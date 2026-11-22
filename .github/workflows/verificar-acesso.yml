@@ -1,0 +1,69 @@
+name: Verificar identificação dos convidados
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - config.js
+      - .github/workflows/verificar-acesso.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar os arquivos
+        uses: actions/checkout@v4
+      - name: Testar a identificação sem alterar a planilha
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          const config = readFileSync('config.js', 'utf8');
+          const match = config.match(/appsScriptUrl:\s*'([^']+)'/);
+          if (!match?.[1]) throw new Error('URL do Apps Script ausente no config.js');
+          const endpoint = match[1];
+
+          let numero = 0;
+          async function consultar(parametros) {
+            numero += 1;
+            const callback = `conviteResposta_999999_${numero}`;
+            const url = new URL(endpoint);
+            for (const [chave, valor] of Object.entries(parametros)) {
+              url.searchParams.set(chave, valor);
+            }
+            url.searchParams.set('callback', callback);
+            const resposta = await fetch(url, {
+              redirect: 'follow',
+              signal: AbortSignal.timeout(20000)
+            });
+            const texto = (await resposta.text()).trim();
+            const prefixo = callback + '(';
+            if (!resposta.ok || !texto.startsWith(prefixo) || !texto.endsWith(');')) {
+              throw new Error('O Apps Script não retornou uma resposta JSONP válida. Verifique a implantação como "Qualquer pessoa".');
+            }
+            return JSON.parse(texto.slice(prefixo.length, -2));
+          }
+
+          const convidado = await consultar({ acao: 'entrar', nome: 'ESTEVAO' });
+          if (!convidado.ok || !convidado.autorizado || !convidado.token) {
+            throw new Error('Nome cadastrado não foi autorizado. Confira permissões do Apps Script e acesso à planilha.');
+          }
+          console.log('Nome cadastrado: reconhecido');
+
+          const sessao = await consultar({ acao: 'sessao', token: convidado.token });
+          if (!sessao.ok || !sessao.autorizado) {
+            throw new Error('Sessão recém-criada não foi validada');
+          }
+          console.log('Sessão: válida');
+
+          const desconhecido = await consultar({ acao: 'entrar', nome: 'CONVIDADO_INEXISTENTE_98765' });
+          if (desconhecido.autorizado || desconhecido.codigo !== 'NAO_ENCONTRADO') {
+            throw new Error('Nome inexistente não foi recusado corretamente');
+          }
+          console.log('Nome inexistente: recusado');
+          NODE
