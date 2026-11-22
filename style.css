@@ -55,20 +55,12 @@ body {
 }
 .video-container iframe { display: block; width: 100%; height: 100%; border: 0; }
 
-/* A segunda etapa cobre somente o título da primeira pergunta;
-   o vídeo e as palavras "sim"/"não" da imagem não se movem. */
-.pergunta-certeza {
-  position: absolute;
-  left: 9.6%; top: 54.25%; width: 58%; height: 5.5%;
-  background: radial-gradient(ellipse at 60% 40%, #230202, #080000 72%);
-  display: flex; align-items: center; justify-content: flex-start;
-  padding-left: 4%;
-}
-.pergunta-certeza span {
-  color: #ae0b09;
-  font: bold italic clamp(16px, 4.8vw, 26px) / 1.1 Georgia, 'Times New Roman', serif;
-  text-shadow: 0 2px 2px #000;
-}
+/* A arte da confirmação é sobreposta à imagem da enquete.
+   O iframe fica numa camada acima, sem perder o tempo de reprodução. */
+.arte-certeza { position: absolute; inset: 0; }
+.video-container { z-index: 2; }
+.opcoes-presenca { z-index: 3; }
+.retorno-presenca { z-index: 4; }
 .opcoes-presenca { position: absolute; inset: 0; pointer-events: none; }
 .opcao-presenca {
   position: absolute; left: 13.5%; width: 29%; height: 6.4%;
@@ -80,17 +72,6 @@ body {
 .opcao-presenca:focus-visible { outline: 2px solid rgba(245,90,90,.86); outline-offset: -3px; }
 .opcao-presenca:disabled { cursor: progress; }
 
-.tela-nao-provisoria {
-  width: 100%; height: 100%;
-  display: flex; flex-direction: column; justify-content: center;
-  align-items: center; text-align: center; gap: 20px;
-  padding: 8%; color: #fff;
-}
-.tela-nao-provisoria p { font-size: clamp(17px, 4.3vw, 23px); }
-.tela-nao-provisoria button {
-  padding: 9px 18px; background: transparent; border: 1px solid #a20b08;
-  color: #fff; cursor: pointer; border-radius: 4px;
-}
 .somente-leitor {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;

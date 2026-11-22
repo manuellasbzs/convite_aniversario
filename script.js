@@ -7,10 +7,7 @@ const retornoIdentificacao = document.querySelector('#retorno-identificacao');
 const retornoPresenca = document.querySelector('#retorno-presenca');
 const botoesPresenca = Array.from(document.querySelectorAll('.opcao-presenca'));
 const iframeVideo = document.querySelector('#video-convite');
-const perguntaCerteza = document.querySelector('#pergunta-certeza');
-const imagemTelaNao = document.querySelector('#arte-tela-nao');
-const telaNaoProvisoria = document.querySelector('#tela-nao-provisoria');
-const botaoAlterar = document.querySelector('#botao-alterar-resposta');
+const arteCerteza = document.querySelector('#arte-certeza');
 
 const URL_VALIDACAO = window.CONVITE_CONFIG?.appsScriptUrl?.trim() || '';
 const CHAVE_SESSAO = 'convite_aniversario_sessao';
@@ -75,7 +72,7 @@ function alternarTela(destino) {
 function mostrarPerguntaInicial() {
   etapa = 'presenca';
   escolhaInicial = null;
-  perguntaCerteza.hidden = true;
+  arteCerteza.hidden = true;
   document.querySelector('#opcoes-presenca').setAttribute('aria-label', 'Marcar presença');
   botoesPresenca.forEach(botao => {
     botao.disabled = false;
@@ -90,7 +87,7 @@ function mostrarSegundaPergunta(resposta) {
   escolhaInicial = resposta;
   etapa = 'certeza';
   retornoPresenca.textContent = '';
-  perguntaCerteza.hidden = false;
+  arteCerteza.hidden = false;
   document.querySelector('#opcoes-presenca').setAttribute('aria-label', 'Tem certeza?');
   botoesPresenca.forEach(botao => botao.setAttribute('aria-label', botao.dataset.resposta === 'sim'
     ? 'Sim, tenho certeza' : 'Não, não tenho certeza'));
@@ -108,20 +105,6 @@ function exibirConvite(sessao) {
 
 function exibirTelaNao() {
   alternarTela('nao');
-  // Somente passa a carregar a arte quando ela existir no repositório.
-  // Se ainda não foi enviada, mantém um aviso neutro e funcional.
-  if (!imagemTelaNao.dataset.carregada) {
-    imagemTelaNao.dataset.carregada = 'true';
-    imagemTelaNao.addEventListener('load', () => {
-      imagemTelaNao.hidden = false;
-      telaNaoProvisoria.hidden = true;
-    }, { once: true });
-    imagemTelaNao.addEventListener('error', () => {
-      imagemTelaNao.hidden = true;
-      telaNaoProvisoria.hidden = false;
-    }, { once: true });
-    imagemTelaNao.src = 'assets/tela-nao.png';
-  }
 }
 
 function encerrarSessao(mensagem) {
@@ -153,12 +136,7 @@ formulario.addEventListener('submit', async (evento) => {
     if (resposta.ok && resposta.autorizado && resposta.token && resposta.nome) {
       const sessao = { nome: resposta.nome, token: resposta.token, confirmacao: resposta.confirmacao };
       sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
-      if (sessao.confirmacao === 'Não comparecerá') {
-        sessaoAtiva = sessao;
-        exibirTelaNao();
-      } else {
-        exibirConvite(sessao);
-      }
+      exibirConvite(sessao);
     } else if (resposta.codigo === 'NAO_ENCONTRADO') {
       retornoIdentificacao.textContent = 'Nome não encontrado na lista de convidados.';
     } else {
@@ -214,10 +192,6 @@ botoesPresenca.forEach(botao => botao.addEventListener('click', async () => {
   }
 }));
 
-botaoAlterar.addEventListener('click', () => {
-  if (sessaoAtiva) exibirConvite(sessaoAtiva);
-});
-
 (async function restaurarSessao() {
   if (!URL_VALIDACAO) return;
   let salva;
@@ -227,12 +201,7 @@ botaoAlterar.addEventListener('click', () => {
     const resposta = await consultarPlanilha({ acao: 'sessao', token: salva.token });
     if (resposta.ok && resposta.autorizado) {
       const sessao = { token: salva.token, nome: resposta.nome, confirmacao: resposta.confirmacao };
-      if (sessao.confirmacao === 'Não comparecerá') {
-        sessaoAtiva = sessao;
-        exibirTelaNao();
-      } else {
-        exibirConvite(sessao);
-      }
+      exibirConvite(sessao);
     } else {
       sessionStorage.removeItem(CHAVE_SESSAO);
     }

@@ -36,11 +36,9 @@
           allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div>
 
-      <!-- Ao entrar na segunda pergunta, muda apenas a arte da pergunta.
-           As opções "sim" e "não" continuam sendo as originais do PSD. -->
-      <div id="pergunta-certeza" class="pergunta-certeza" hidden>
-        <span>tem certeza?</span>
-      </div>
+      <!-- A segunda pergunta é a arte original do PSD; o vídeo acima permanece intacto. -->
+      <img id="arte-certeza" class="arte-photoshop arte-certeza"
+        src="assets/tela-certeza.png" alt="" width="1080" height="1920" hidden />
 
       <div id="opcoes-presenca" class="opcoes-presenca" role="group" aria-label="Marcar presença">
         <button class="opcao-presenca opcao-sim" type="button" data-resposta="sim"
@@ -51,15 +49,11 @@
       <p id="retorno-presenca" class="retorno-presenca" role="status" aria-live="polite"></p>
     </main>
 
-    <!-- Quando a nova arte de encerramento for enviada, será mostrada aqui.
-         Até lá, uma mensagem discreta indica a resposta salva, sem inventar design. -->
+    <!-- A resposta "Não" usa a arte de encerramento fornecida no PSD. -->
     <main id="tela-nao" class="tela-nao" aria-label="Resposta registrada" hidden>
-      <img id="arte-tela-nao" class="arte-photoshop" alt="Tela final do convite"
-        width="1080" height="1920" draggable="false" hidden />
-      <div id="tela-nao-provisoria" class="tela-nao-provisoria">
-        <p>Resposta registrada.</p>
-        <button id="botao-alterar-resposta" type="button">Alterar resposta</button>
-      </div>
+      <img class="arte-photoshop" src="assets/tela-nao.png"
+        alt="Convite encerrado. Até a próxima."
+        width="1080" height="1920" draggable="false" />
     </main>
   </body>
 </html>
