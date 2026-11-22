@@ -7,36 +7,59 @@
     <meta name="description" content="Convite de aniversário" />
     <title>Convite de aniversário</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="config.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body>
-    <main class="tela-inicial" aria-label="Identificação do convidado">
-      <img
-        class="arte-photoshop"
-        src="assets/tela-inicial.png"
+    <main id="tela-inicial" class="tela-inicial" aria-label="Identificação do convidado">
+      <img class="arte-photoshop" src="assets/tela-inicial.png"
         alt="Escolha seu nome. Responda ao chamado. Quem é você?"
-        width="1080"
-        height="1920"
-        draggable="false"
-      />
-
+        width="1080" height="1920" draggable="false" />
       <form id="form-identificacao" class="form-identificacao" autocomplete="on">
-        <label class="somente-leitor" for="nome-convidado">Nome e sobrenome</label>
-        <input
-          id="nome-convidado"
-          name="nome"
-          type="text"
-          autocomplete="name"
-          enterkeyhint="go"
-          maxlength="120"
-          required
-          spellcheck="false"
-          aria-describedby="retorno-identificacao"
-        />
+        <label class="somente-leitor" for="nome-convidado">Nome do convidado</label>
+        <input id="nome-convidado" name="nome" type="text" autocomplete="name"
+          enterkeyhint="go" maxlength="120" required spellcheck="false"
+          aria-describedby="retorno-identificacao" />
         <button class="somente-leitor" type="submit">Continuar</button>
       </form>
+      <p id="retorno-identificacao" class="retorno-identificacao" role="status" aria-live="polite"></p>
+    </main>
 
-      <p id="retorno-identificacao" class="retorno-identificacao" aria-live="polite"></p>
+    <main id="tela-convite" class="tela-convite" aria-label="Convite e confirmação de presença" hidden>
+      <img class="arte-photoshop" src="assets/tela-convite.png"
+        alt="Convite de aniversário com a pergunta marcar presença e opções sim e não"
+        width="1080" height="1920" draggable="false" />
+
+      <div class="video-container">
+        <iframe id="video-convite" title="Vídeo do convite de aniversário"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+
+      <!-- Ao entrar na segunda pergunta, muda apenas a arte da pergunta.
+           As opções "sim" e "não" continuam sendo as originais do PSD. -->
+      <div id="pergunta-certeza" class="pergunta-certeza" hidden>
+        <span>tem certeza?</span>
+      </div>
+
+      <div id="opcoes-presenca" class="opcoes-presenca" role="group" aria-label="Marcar presença">
+        <button class="opcao-presenca opcao-sim" type="button" data-resposta="sim"
+          aria-label="Sim, irei" title="Sim, irei"></button>
+        <button class="opcao-presenca opcao-nao" type="button" data-resposta="nao"
+          aria-label="Não poderei comparecer" title="Não poderei comparecer"></button>
+      </div>
+      <p id="retorno-presenca" class="retorno-presenca" role="status" aria-live="polite"></p>
+    </main>
+
+    <!-- Quando a nova arte de encerramento for enviada, será mostrada aqui.
+         Até lá, uma mensagem discreta indica a resposta salva, sem inventar design. -->
+    <main id="tela-nao" class="tela-nao" aria-label="Resposta registrada" hidden>
+      <img id="arte-tela-nao" class="arte-photoshop" alt="Tela final do convite"
+        width="1080" height="1920" draggable="false" hidden />
+      <div id="tela-nao-provisoria" class="tela-nao-provisoria">
+        <p>Resposta registrada.</p>
+        <button id="botao-alterar-resposta" type="button">Alterar resposta</button>
+      </div>
     </main>
   </body>
 </html>

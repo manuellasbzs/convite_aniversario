@@ -1,12 +1,28 @@
+const telaInicial = document.querySelector('#tela-inicial');
+const telaConvite = document.querySelector('#tela-convite');
+const telaNao = document.querySelector('#tela-nao');
 const formulario = document.querySelector('#form-identificacao');
 const campoNome = document.querySelector('#nome-convidado');
-const retorno = document.querySelector('#retorno-identificacao');
+const retornoIdentificacao = document.querySelector('#retorno-identificacao');
+const retornoPresenca = document.querySelector('#retorno-presenca');
+const botoesPresenca = Array.from(document.querySelectorAll('.opcao-presenca'));
+const iframeVideo = document.querySelector('#video-convite');
+const perguntaCerteza = document.querySelector('#pergunta-certeza');
+const imagemTelaNao = document.querySelector('#arte-tela-nao');
+const telaNaoProvisoria = document.querySelector('#tela-nao-provisoria');
+const botaoAlterar = document.querySelector('#botao-alterar-resposta');
 
-// Preencher depois que o Google Apps Script for implantado como aplicativo Web.
-const URL_VALIDACAO = '';
+const URL_VALIDACAO = window.CONVITE_CONFIG?.appsScriptUrl?.trim() || '';
+const CHAVE_SESSAO = 'convite_aniversario_sessao';
+const URL_VIDEO = 'https://www.youtube.com/embed/UtyNtXRu9zQ?rel=0';
+let sessaoAtiva = null;
+let escolhaInicial = null;
+let etapa = 'presenca';
+let salvando = false;
+let numeroSolicitacao = 0;
 
 function normalizarNome(nome) {
-  return nome
+  return String(nome || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
@@ -14,61 +30,213 @@ function normalizarNome(nome) {
     .toLocaleLowerCase('pt-BR');
 }
 
-function consultarConvidado(nome) {
+function consultarPlanilha(parametros) {
   return new Promise((resolve, reject) => {
-    const callback = 'conviteResposta_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-    const script = document.createElement('script');
-    const timeout = window.setTimeout(() => finalizar(new Error('Tempo de resposta excedido')), 12000);
+    if (!URL_VALIDACAO) return reject(new Error('INTEGRACAO_PENDENTE'));
+    let endereco;
+    try {
+      endereco = new URL(URL_VALIDACAO);
+      if (endereco.protocol !== 'https:') throw new Error('URL_INVALIDA');
+    } catch {
+      return reject(new Error('URL_INVALIDA'));
+    }
 
-    function finalizar(resultado, erro = false) {
-      window.clearTimeout(timeout);
+    const callback = `conviteResposta_${Date.now()}_${++numeroSolicitacao}`;
+    const script = document.createElement('script');
+    let concluido = false;
+    const temporizador = window.setTimeout(() => finalizar(new Error('SEM_RESPOSTA')), 15000);
+
+    function finalizar(resultado) {
+      if (concluido) return;
+      concluido = true;
+      window.clearTimeout(temporizador);
       delete window[callback];
       script.remove();
-      if (erro || resultado instanceof Error) reject(resultado);
+      if (resultado instanceof Error) reject(resultado);
       else resolve(resultado);
     }
 
-    window[callback] = (dados) => finalizar(dados);
-    script.onerror = () => finalizar(new Error('Não foi possível validar o nome'));
-    const url = new URL(URL_VALIDACAO);
-    url.searchParams.set('nome', nome);
-    url.searchParams.set('callback', callback);
-    script.src = url.toString();
+    window[callback] = finalizar;
+    script.onerror = () => finalizar(new Error('ERRO_REDE'));
+    Object.entries(parametros).forEach(([chave, valor]) => endereco.searchParams.set(chave, valor));
+    endereco.searchParams.set('callback', callback);
+    script.src = endereco.toString();
     document.body.appendChild(script);
   });
 }
 
+function alternarTela(destino) {
+  telaInicial.hidden = destino !== 'inicial';
+  telaConvite.hidden = destino !== 'convite';
+  telaNao.hidden = destino !== 'nao';
+  window.scrollTo(0, 0);
+}
+
+function mostrarPerguntaInicial() {
+  etapa = 'presenca';
+  escolhaInicial = null;
+  perguntaCerteza.hidden = true;
+  document.querySelector('#opcoes-presenca').setAttribute('aria-label', 'Marcar presença');
+  botoesPresenca.forEach(botao => {
+    botao.disabled = false;
+    botao.setAttribute('aria-label', botao.dataset.resposta === 'sim'
+      ? 'Sim, irei' : 'Não poderei comparecer');
+    botao.removeAttribute('aria-pressed');
+  });
+}
+
+function mostrarSegundaPergunta(resposta) {
+  if (!sessaoAtiva || !['sim', 'nao'].includes(resposta)) return;
+  escolhaInicial = resposta;
+  etapa = 'certeza';
+  retornoPresenca.textContent = '';
+  perguntaCerteza.hidden = false;
+  document.querySelector('#opcoes-presenca').setAttribute('aria-label', 'Tem certeza?');
+  botoesPresenca.forEach(botao => botao.setAttribute('aria-label', botao.dataset.resposta === 'sim'
+    ? 'Sim, tenho certeza' : 'Não, não tenho certeza'));
+}
+
+function exibirConvite(sessao) {
+  sessaoAtiva = sessao;
+  mostrarPerguntaInicial();
+  alternarTela('convite');
+  retornoPresenca.textContent = sessao.confirmacao === 'Confirmado'
+    ? 'Sua presença já está confirmada.' : '';
+  // Um único iframe: mudar a enquete não interrompe a reprodução.
+  if (!iframeVideo.getAttribute('src')) iframeVideo.src = URL_VIDEO;
+}
+
+function exibirTelaNao() {
+  alternarTela('nao');
+  // Somente passa a carregar a arte quando ela existir no repositório.
+  // Se ainda não foi enviada, mantém um aviso neutro e funcional.
+  if (!imagemTelaNao.dataset.carregada) {
+    imagemTelaNao.dataset.carregada = 'true';
+    imagemTelaNao.addEventListener('load', () => {
+      imagemTelaNao.hidden = false;
+      telaNaoProvisoria.hidden = true;
+    }, { once: true });
+    imagemTelaNao.addEventListener('error', () => {
+      imagemTelaNao.hidden = true;
+      telaNaoProvisoria.hidden = false;
+    }, { once: true });
+    imagemTelaNao.src = 'assets/tela-nao.png';
+  }
+}
+
+function encerrarSessao(mensagem) {
+  sessaoAtiva = null;
+  sessionStorage.removeItem(CHAVE_SESSAO);
+  alternarTela('inicial');
+  iframeVideo.removeAttribute('src');
+  campoNome.disabled = false;
+  retornoIdentificacao.textContent = mensagem || '';
+}
+
 formulario.addEventListener('submit', async (evento) => {
   evento.preventDefault();
-  const nomeDigitado = campoNome.value.trim().replace(/\s+/g, ' ');
-  if (!normalizarNome(nomeDigitado)) {
-    retorno.textContent = 'Digite seu nome.';
+  const digitado = campoNome.value.trim().replace(/\s+/g, ' ');
+  if (!normalizarNome(digitado)) {
+    retornoIdentificacao.textContent = 'Digite seu nome.';
+    campoNome.focus();
     return;
   }
-
   if (!URL_VALIDACAO) {
-    retorno.textContent = 'A confirmação dos convidados está sendo configurada.';
+    retornoIdentificacao.textContent = 'A lista de convidados está sendo conectada. Tente novamente em breve.';
     return;
   }
 
-  retorno.textContent = 'Verificando nome...';
   campoNome.disabled = true;
-
+  retornoIdentificacao.textContent = 'Verificando nome...';
   try {
-    const resposta = await consultarConvidado(nomeDigitado);
-    if (resposta.autorizado) {
-      sessionStorage.setItem('convidadoAutorizado', resposta.nome);
-      retorno.textContent = 'Nome autorizado. A próxima tela será adicionada em breve.';
+    const resposta = await consultarPlanilha({ acao: 'entrar', nome: digitado });
+    if (resposta.ok && resposta.autorizado && resposta.token && resposta.nome) {
+      const sessao = { nome: resposta.nome, token: resposta.token, confirmacao: resposta.confirmacao };
+      sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+      if (sessao.confirmacao === 'Não comparecerá') {
+        sessaoAtiva = sessao;
+        exibirTelaNao();
+      } else {
+        exibirConvite(sessao);
+      }
+    } else if (resposta.codigo === 'NAO_ENCONTRADO') {
+      retornoIdentificacao.textContent = 'Nome não encontrado na lista de convidados.';
     } else {
-      retorno.textContent = 'Nome não encontrado na lista de convidados.';
+      retornoIdentificacao.textContent = 'Não foi possível verificar seu nome agora. Tente novamente.';
     }
   } catch {
-    retorno.textContent = 'Não foi possível verificar seu nome. Tente novamente.';
+    retornoIdentificacao.textContent = 'Não foi possível verificar seu nome agora. Tente novamente.';
   } finally {
     campoNome.disabled = false;
   }
 });
 
-campoNome.addEventListener('input', () => {
-  retorno.textContent = '';
+campoNome.addEventListener('input', () => { retornoIdentificacao.textContent = ''; });
+
+botoesPresenca.forEach(botao => botao.addEventListener('click', async () => {
+  if (!sessaoAtiva || salvando) return;
+  if (etapa === 'presenca') {
+    // A primeira resposta vale para a planilha; ainda não salva.
+    mostrarSegundaPergunta(botao.dataset.resposta);
+    return;
+  }
+  if (etapa !== 'certeza' || !escolhaInicial) return;
+
+  // A segunda enquete é apenas visual. "Sim" OU "Não" nela fazem a
+  // mesma coisa: registram a escolha da PRIMEIRA enquete.
+  salvando = true;
+  botoesPresenca.forEach(b => { b.disabled = true; });
+  retornoPresenca.textContent = 'Salvando resposta...';
+  try {
+    const resposta = await consultarPlanilha({
+      acao: 'confirmar', token: sessaoAtiva.token, resposta: escolhaInicial
+    });
+    if (resposta.ok && ['Confirmado', 'Não comparecerá'].includes(resposta.confirmacao)) {
+      sessaoAtiva.confirmacao = resposta.confirmacao;
+      sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessaoAtiva));
+      if (escolhaInicial === 'nao') {
+        // Direciona à tela final específica da resposta "Não".
+        exibirTelaNao();
+      } else {
+        mostrarPerguntaInicial();
+        retornoPresenca.textContent = 'Sua presença foi confirmada!';
+      }
+    } else if (resposta.codigo === 'SESSAO_EXPIRADA') {
+      encerrarSessao('Sua sessão expirou. Digite seu nome novamente.');
+    } else {
+      retornoPresenca.textContent = 'Não foi possível salvar. Tente novamente.';
+    }
+  } catch {
+    retornoPresenca.textContent = 'Não foi possível salvar. Tente novamente.';
+  } finally {
+    salvando = false;
+    if (!telaConvite.hidden) botoesPresenca.forEach(b => { b.disabled = false; });
+  }
+}));
+
+botaoAlterar.addEventListener('click', () => {
+  if (sessaoAtiva) exibirConvite(sessaoAtiva);
 });
+
+(async function restaurarSessao() {
+  if (!URL_VALIDACAO) return;
+  let salva;
+  try { salva = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO)); } catch { return; }
+  if (!salva || typeof salva.token !== 'string') return;
+  try {
+    const resposta = await consultarPlanilha({ acao: 'sessao', token: salva.token });
+    if (resposta.ok && resposta.autorizado) {
+      const sessao = { token: salva.token, nome: resposta.nome, confirmacao: resposta.confirmacao };
+      if (sessao.confirmacao === 'Não comparecerá') {
+        sessaoAtiva = sessao;
+        exibirTelaNao();
+      } else {
+        exibirConvite(sessao);
+      }
+    } else {
+      sessionStorage.removeItem(CHAVE_SESSAO);
+    }
+  } catch {
+    // Uma falha na verificação nunca libera a segunda tela.
+  }
+})();

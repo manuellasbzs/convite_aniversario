@@ -1,14 +1,19 @@
-# Integração com Google Planilhas
+# Configuração do Google Planilhas (etapa obrigatória)
 
-A lista de **59 convidados** está numa planilha privada do Google Sheets (fora do GitHub).
+A lista dos 59 convidados está nesta planilha privada:
+https://docs.google.com/spreadsheets/d/1DzFWw-ZUgqexU7zYt6Crz_LcRz6SX7Eyp_pClmEsOKU/edit
 
-1. Abra a planilha privada e escolha **Extensões > Apps Script**.
-2. Cole o conteúdo de `Code.gs` no editor.
-3. Em **Configurações do projeto > Propriedades do script**, crie `SPREADSHEET_ID` com o ID da planilha privada.
-4. Implante como **Aplicativo da Web**, executar como **Eu**, acesso **Qualquer pessoa**. Autorize a execução na sua conta.
-5. Copie a URL terminada em `/exec` e cole na constante `URL_VALIDACAO` de `script.js`.
-6. Faça commit e teste um convidado cadastrado e outro não cadastrado.
+O site **ainda não valida nomes nem salva presença em produção** até a implantação do Apps Script. O código já está pronto para isso.
 
-Não coloque nomes no código público do GitHub. Esta validação apenas por nome é adequada como barreira simbólica, não como autenticação forte. O convite oficial e RSVP serão adicionados após receber o PSD da segunda tela.
+1. Abra a planilha usando sua conta Google e clique em **Extensões > Apps Script**.
+2. Substitua o código padrão do editor pelo conteúdo do arquivo `integracao/Code.gs` e salve.
+3. Vá a **Configurações do projeto > Propriedades do script > Adicionar propriedade**. Nome: `SPREADSHEET_ID`; valor: `1DzFWw-ZUgqexU7zYt6Crz_LcRz6SX7Eyp_pClmEsOKU`.
+4. Em **Implantar > Nova implantação**, selecione **Aplicativo da Web**, execute como **Eu** e acesso **Qualquer pessoa**. Autorize na sua conta.
+5. Copie o endereço terminado em `/exec` da implantação e preencha a propriedade `appsScriptUrl` em `config.js` no GitHub. A URL de implantação não é segredo; não publique a planilha nem a lista de nomes.
+6. Aguarde o commit ser publicado no GitHub Pages e confira o acesso com `ESTEVAO`, `Luís` e um nome que não esteja na lista. Clique em `sim` e depois `não`: a coluna **Confirmação** da mesma linha deve atualizar e **Respondido em** deve registrar o horário, sem criar outra linha.
 
-A forma de comparar nomes remove acentos, espaços extras e diferenças de maiúsculas/minúsculas. Ex.: `ESTEVAO` = `Estevão`, `guilherme antônio` = `Guilherme Antônio`. Nomes distintos continuam distintos: `Guilherme Fazoll` e `Guilherme Fazollo`.
+**Mudanças no arquivo `integracao/Code.gs` exigem nova versão implantada** no Apps Script (Implantar > Gerenciar implantações > Editar > Nova versão). Atualizar só o GitHub não altera o código que já está publicado no Google.
+
+**Acesso por nome não é autenticação segura.** Quem souber um nome autorizado poderá entrar e responder por esse convidado. GitHub Pages publica os arquivos estáticos e a imagem do convite; a planilha permanece privada. O token de sessão temporário (até 6 horas) limita atualizações acidentais ou sem login, mas não resolve a possibilidade de alguém informar o nome de outra pessoa.
+
+**Não usar um endpoint para publicar a lista inteira.** O Apps Script fornece apenas a resposta ao nome informado. Não colocar dados pessoais em arquivos de domínio público.
