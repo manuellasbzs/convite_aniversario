@@ -1,6 +1,6 @@
 /**
  * Google Apps Script da planilha privada de convidados.
- * Propriedade de script obrigatória: SPREADSHEET_ID.
+ * A planilha do convite já está indicada no código. Não são necessárias propriedades do script.
  * Publicação: aplicativo Web, executar como "Eu", acesso "Qualquer pessoa".
  *
  * É uma barreira simples por nome, NÃO verificação forte de identidade.
@@ -19,8 +19,7 @@ function normalizarNome(nome) {
 }
 
 function acessarAba_() {
-  const planilhaId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-  if (!planilhaId) throw new Error('SPREADSHEET_ID não foi definido.');
+  const planilhaId = '1DzFWw-ZUgqexU7zYt6Crz_LcRz6SX7Eyp_pClmEsOKU';
   const aba = SpreadsheetApp.openById(planilhaId).getSheetByName(ABA_CONVIDADOS);
   if (!aba) throw new Error('Não existe a aba Convidados.');
   return aba;

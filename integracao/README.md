@@ -1,19 +1,27 @@
-# Configuração do Google Planilhas (etapa obrigatória)
+# Ativação do Google Planilhas
 
-A lista dos 59 convidados está nesta planilha privada:
+O convite **ainda não pode liberar os nomes** enquanto o Google Apps Script não for publicado na sua conta.
+
+A planilha de 59 convidados já existe e é privada:
 https://docs.google.com/spreadsheets/d/1DzFWw-ZUgqexU7zYt6Crz_LcRz6SX7Eyp_pClmEsOKU/edit
 
-O site **ainda não valida nomes nem salva presença em produção** até a implantação do Apps Script. O código já está pronto para isso.
+## Configuração (sem propriedades manuais)
 
-1. Abra a planilha usando sua conta Google e clique em **Extensões > Apps Script**.
-2. Substitua o código padrão do editor pelo conteúdo do arquivo `integracao/Code.gs` e salve.
-3. Vá a **Configurações do projeto > Propriedades do script > Adicionar propriedade**. Nome: `SPREADSHEET_ID`; valor: `1DzFWw-ZUgqexU7zYt6Crz_LcRz6SX7Eyp_pClmEsOKU`.
-4. Em **Implantar > Nova implantação**, selecione **Aplicativo da Web**, execute como **Eu** e acesso **Qualquer pessoa**. Autorize na sua conta.
-5. Copie o endereço terminado em `/exec` da implantação e preencha a propriedade `appsScriptUrl` em `config.js` no GitHub. A URL de implantação não é segredo; não publique a planilha nem a lista de nomes.
-6. Aguarde o commit ser publicado no GitHub Pages e confira o acesso com `ESTEVAO`, `Luís` e um nome que não esteja na lista. Clique em `sim` e depois `não`: a coluna **Confirmação** da mesma linha deve atualizar e **Respondido em** deve registrar o horário, sem criar outra linha.
+1. Abra a planilha acima com a conta proprietária.
+2. Clique em **Extensões > Apps Script**.
+3. No editor de código, substitua o conteúdo de `Código.gs` pelo conteúdo integral de [`Code.gs`](./Code.gs). Salve.
+4. Clique em **Implantar > Nova implantação**, escolha o tipo **Aplicativo da Web**; selecione **Executar como: Eu** e **Quem tem acesso: Qualquer pessoa**; clique em **Implantar** e autorize o acesso à planilha.
+5. Copie a URL do aplicativo Web, terminada em `/exec`, e envie-a na conversa. Então será possível colocá-la no `config.js` do GitHub sem editar o site manualmente.
 
-**Mudanças no arquivo `integracao/Code.gs` exigem nova versão implantada** no Apps Script (Implantar > Gerenciar implantações > Editar > Nova versão). Atualizar só o GitHub não altera o código que já está publicado no Google.
+O ID da planilha já está configurado no código `Code.gs`; **não é preciso configurar propriedades do script**.
 
-**Acesso por nome não é autenticação segura.** Quem souber um nome autorizado poderá entrar e responder por esse convidado. GitHub Pages publica os arquivos estáticos e a imagem do convite; a planilha permanece privada. O token de sessão temporário (até 6 horas) limita atualizações acidentais ou sem login, mas não resolve a possibilidade de alguém informar o nome de outra pessoa.
+## Testes após a conexão
 
-**Não usar um endpoint para publicar a lista inteira.** O Apps Script fornece apenas a resposta ao nome informado. Não colocar dados pessoais em arquivos de domínio público.
+- `ESTEVAO` e `Estevão` devem identificar a mesma pessoa.
+- `Luís` e `luis` devem identificar a mesma pessoa.
+- Um nome não cadastrado não deve entrar.
+- A resposta da primeira enquete, após a segunda pergunta visual, deve atualizar a coluna **Confirmação** e o horário em **Respondido em**.
+
+**Importante:** o frontend de GitHub Pages é público. A lista de convidados continua privada na planilha; o endpoint só responde sobre o nome consultado. Identificação exclusivamente por nome **não é autenticação forte**: outra pessoa pode informar o nome de um convidado. O token de sessão não impede isso.
+
+Caso o Apps Script seja alterado depois, faça uma nova versão em **Implantar > Gerenciar implantações > Editar > Nova versão**, para atualizar o backend publicado.
