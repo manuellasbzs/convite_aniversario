@@ -10,11 +10,11 @@ Convite digital criado com HTML, CSS, JavaScript, Photoshop e Google Planilhas.
 4. **Segunda enquete:** a imagem troca para o PSD original com “certeza?” sem mexer no vídeo; **qualquer uma das duas opções** confirma a escolha registrada na primeira enquete.
 5. **Planilha:** somente após a segunda resposta a linha do convidado é atualizada: `Confirmado` ou `Não comparecerá`, com data/hora.
 6. **Primeira resposta `não`:** após a segunda pergunta abre o PSD original da tela de encerramento (“até a próxima…”), em `assets/tela-nao.png`.
-7. **Primeira resposta `sim`:** confirma a presença e mantém o vídeo disponível na tela do convite.
+7. **Primeira resposta `sim`:** após a pergunta visual "certeza?", registra a confirmação e abre o **convite completo do Photoshop**, em `assets/convite-final.webp`, com rolagem vertical natural para ler a arte inteira.
 
-## Pendência para ativar o login e o registro real de confirmações
+## Integração com Google Planilhas
 
-O projeto do Apps Script está no arquivo `integracao/Code.gs`, mas **o script ainda precisa ser implantado/autorizado pela conta Google** e a URL `/exec` inserida em `config.js`. Consulte `integracao/README.md`.
+O Google Apps Script já foi implantado e a URL está em `config.js`. A resposta da **primeira enquete** só é registrada depois de qualquer clique na **segunda enquete visual**; caso a gravação falhe, não abre a tela final. Consulte `integracao/README.md` para configuração e testes.
 
 A lista de 59 convidados **não está no repositório público**; está numa planilha Google privada. A comparação de nomes ignora acentos, caixa e espaços excedentes.
 

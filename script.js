@@ -1,6 +1,7 @@
 const telaInicial = document.querySelector('#tela-inicial');
 const telaConvite = document.querySelector('#tela-convite');
 const telaNao = document.querySelector('#tela-nao');
+const telaSim = document.querySelector('#tela-sim');
 const formulario = document.querySelector('#form-identificacao');
 const campoNome = document.querySelector('#nome-convidado');
 const retornoIdentificacao = document.querySelector('#retorno-identificacao');
@@ -66,6 +67,8 @@ function alternarTela(destino) {
   telaInicial.hidden = destino !== 'inicial';
   telaConvite.hidden = destino !== 'convite';
   telaNao.hidden = destino !== 'nao';
+  telaSim.hidden = destino !== 'sim';
+  document.body.classList.toggle('convite-longo-ativo', destino === 'sim');
   window.scrollTo(0, 0);
 }
 
@@ -105,6 +108,12 @@ function exibirConvite(sessao) {
 
 function exibirTelaNao() {
   alternarTela('nao');
+  iframeVideo.removeAttribute('src');
+}
+
+function exibirTelaSim() {
+  alternarTela('sim');
+  iframeVideo.removeAttribute('src');
 }
 
 function encerrarSessao(mensagem) {
@@ -176,8 +185,9 @@ botoesPresenca.forEach(botao => botao.addEventListener('click', async () => {
         // Direciona à tela final específica da resposta "Não".
         exibirTelaNao();
       } else {
-        mostrarPerguntaInicial();
-        retornoPresenca.textContent = 'Sua presença foi confirmada!';
+        // "Sim" na primeira enquete: após qualquer resposta na segunda,
+        // exibir a arte final longa. A escolha já foi salva na planilha.
+        exibirTelaSim();
       }
     } else if (resposta.codigo === 'SESSAO_EXPIRADA') {
       encerrarSessao('Sua sessão expirou. Digite seu nome novamente.');
