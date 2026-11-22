@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#030000" />
+    <meta name="description" content="Convite de aniversário" />
+    <title>Convite de aniversário</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="tela-inicial" aria-label="Identificação do convidado">
+      <img
+        class="arte-photoshop"
+        src="assets/tela-inicial.png"
+        alt="Escolha seu nome. Responda ao chamado. Quem é você?"
+        width="1080"
+        height="1920"
+        draggable="false"
+      />
+
+      <form id="form-identificacao" class="form-identificacao" autocomplete="on">
+        <label class="somente-leitor" for="nome-convidado">Nome e sobrenome</label>
+        <input
+          id="nome-convidado"
+          name="nome"
+          type="text"
+          autocomplete="name"
+          enterkeyhint="go"
+          maxlength="120"
+          required
+          spellcheck="false"
+          aria-describedby="retorno-identificacao"
+        />
+        <button class="somente-leitor" type="submit">Continuar</button>
+      </form>
+
+      <p id="retorno-identificacao" class="retorno-identificacao" aria-live="polite"></p>
+    </main>
+  </body>
+</html>
